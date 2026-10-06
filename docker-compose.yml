@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ml-service:
+    build:
+      context: ./ml-service
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./ml-service/ml_data:/app/ml_data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb+srv://bhanu89190654_db_user:P6s4X0ODr5bhcwlr@cluster0.clqmce7.mongodb.net/?appName=Cluster0}
+      - MONGO_DB=${MONGO_DB:-cloud_dedup}
+      - SECRET_KEY=${SECRET_KEY:-secure-data-dedup-key}
+      - USE_S3=True
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION:-ap-southeast-2}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-bhanu1011}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ML_SERVICE_URL=http://ml-service:8000
+    depends_on:
+      - ml-service
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5000:80"
+    depends_on:
+      - backend
